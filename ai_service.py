@@ -554,7 +554,7 @@ def _call_claude(user_prompt: str, timeout: int = 45) -> dict | None:
         return None
 
 
-def _call_grok(user_prompt: str, timeout: int = 45) -> dict | None:
+def _call_grok(user_prompt: str, timeout: int = 40) -> dict | None:
     api_key = os.environ.get("XAI_API_KEY")
     if not api_key:
         return None
