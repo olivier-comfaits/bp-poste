@@ -206,6 +206,7 @@ def init_sqlite():
     conn.close()
     ENGINE["name"] = "sqlite"
 
+
 def init_db():
     if not init_mysql():
         init_sqlite()

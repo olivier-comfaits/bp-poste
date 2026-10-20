@@ -270,7 +270,6 @@ def modele_excel():
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-
 @app.route("/api/projets", methods=["POST"])
 def create_projet():
     body = request.get_json(force=True, silent=True) or {}

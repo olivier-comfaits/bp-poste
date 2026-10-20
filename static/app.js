@@ -250,6 +250,20 @@ function renderDossier(b) {
             .join("") || "<li class='muted'>Aucun risque spécifique.</li>"}</ul>
         </div>
         <div class="panel" style="margin-top:12px">
+          <h2>Modifier le descriptif</h2>
+          <p class="muted">Édition directe par le manager. Une version est créée avant chaque enregistrement.</p>
+          <div style="display:grid;gap:8px">
+            <label>Nom <input id="edit-nom" value="${esc(p.nom || "")}" style="width:100%" /></label>
+            <label>Description <textarea id="edit-desc" rows="4" style="width:100%">${esc(p.description || "")}</textarea></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label>Investissement (k€) <input id="edit-inv" type="number" value="${p.investissement_k_eur ?? 0}" /></label>
+              <label>ROI % <input id="edit-roi" type="number" value="${p.roi_pct ?? 0}" /></label>
+              <label>CA an 3 (k€) <input id="edit-ca3" type="number" value="${p.ca_annee_3_k ?? 0}" /></label>
+            </div>
+            <button class="btn" id="btn-save">Enregistrer les modifications</button>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:12px">
           <h2>Dialogue d’ajustement</h2>
           <div class="chat">
             <input id="chat-in" placeholder="Ex. que se passe-t-il si le ROI tombe à 8 % ?" />
@@ -312,6 +326,28 @@ function renderDossier(b) {
   $("#chat-in").addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendChat();
   });
+  const saveBtn = $("#btn-save");
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      setBusy("Enregistrement…");
+      try {
+        const body = {
+          nom: $("#edit-nom").value,
+          description: $("#edit-desc").value,
+          investissement_k_eur: Number($("#edit-inv").value) || 0,
+          roi_pct: Number($("#edit-roi").value) || 0,
+          ca_annee_3_k: Number($("#edit-ca3").value) || 0,
+        };
+        const fresh = await api(`/api/projets/${p.id}`, { method: "PUT", body: JSON.stringify(body) });
+        state.dossier = fresh;
+        renderDossier(fresh);
+        loadVersions(p.id);
+        $("#status").textContent = "Modifications enregistrées. Une version a été créée.";
+      } catch (err) {
+        setBusy("Erreur : " + err.message);
+      }
+    };
+  }
 }
 
 async function loadVersions(pid) {

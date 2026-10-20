@@ -133,3 +133,13 @@ CREATE TABLE versions (
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_ver_projet FOREIGN KEY (projet_id) REFERENCES projets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE generations (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  projet_id     INT NOT NULL,
+  type_doc      VARCHAR(40) NOT NULL,
+  moteur        VARCHAR(40),
+  contenu_json  LONGTEXT NOT NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_gen_projet FOREIGN KEY (projet_id) REFERENCES projets(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
