@@ -642,9 +642,15 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
         "evaluation": (
             "Tu es l'évaluateur du score de pertinence. Le porteur N'A PAS saisi de notes. "
             "À partir du dossier (description, branche, typologie, montants, paramètres), "
-            "attribue une note entière de 1 à 5 à chaque champ ci-dessous. "
-            "1 = très faible, 5 = très élevé. "
-            "Pour les risques, 5 = risque élevé. "
+            "attribue une note entière de 1 à 5 à chaque champ. "
+            "1 = très faible, 5 = très élevé. Pour les risques, 5 = risque élevé. "
+            "RÈGLES D'AJUSTEMENT : "
+            "si la description mentionne des mitigations concrètes (formation, pilote, "
+            "mode dégradé, sponsoring, abstraction multi-modèles, API contract-first, "
+            "tests UX, ambassadeurs), BAISSE les risques concernés d'au moins 1 point "
+            "par rapport à une description sans mitigation. "
+            "Si la description précise un alignement Groupe, un impact social ou "
+            "environnemental, ou une maturité technique, HAUSSE les champs correspondants. "
             "N'invente aucun montant. Ne calcule PAS le score 0–100. "
             "JSON strict : "
             '{"type":"evaluation",'
@@ -660,20 +666,17 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
             "\n\nDossier : " + payload
         ),
         "chat": (
-            "Tu es le conseiller du porteur. Réponds en JSON strict avec :\n"
-            '{"type":"chat","reponse":"...","propositions":[{"champ":"nom_du_champ",'
-            '"valeur_actuelle":"...","valeur_suggeree":"...","justification":"..."}],'
-            '"impact_score":"hausse|baisse|incertain","limites":[]}\n'
-            "SENS QUI AMÉLIORE LE SCORE 0-100 :\n"
-            "- BAISSER (valeur plus petite = mieux) : risque_technique, risque_humain, "
-            "risque_reglementaire, complexite_operationnelle, delai_retour_mois, investissement_k_eur.\n"
-            "- HAUSSER (valeur plus grande = mieux) : alignement_groupe, impact_branches, "
-            "impact_social, impact_environnemental, maturite_technique, roi_pct, "
-            "ca_annee_1_k, ca_annee_3_k.\n"
-            "Propose 2 à 4 modifications qui AMÉLIORENT le score. "
-            "Ne propose jamais de hausser un risque ou la complexité. "
-            "N'invente aucun montant : base-toi uniquement sur le dossier. "
-            "Si tu ne peux pas chiffrer, indique le champ et le sens sans chiffre.\n\n"
+            "Tu es le conseiller du porteur. Le porteur ne note pas son projet : "
+            "il modifie uniquement la description (et éventuellement les montants). "
+            "L'IA réévaluera ensuite les dimensions. "
+            "Réponds en JSON strict avec :\n"
+            '{"type":"chat","reponse":"...","propositions":[{"champ":"description",'
+            '"extrait_a_ajouter":"...","effet_attendu":"baisse risque_humain|hausse alignement_groupe|..."}],'
+            '"impact_score":"hausse","limites":[]}\n'
+            "Propose 2 à 3 phrases concrètes à AJOUTER à la description. "
+            "Chaque phrase doit mentionner une mitigation ou un levier qui, "
+            "à la réévaluation, fera BAISSER un risque ou HAUSSER un alignement/impact. "
+            "N'invente aucun montant. Ne propose pas de champs de notation.\n\n"
             f"Demande : {message}\n\nProjet : {payload}"
         ),
     }
