@@ -522,13 +522,13 @@ function renderAnalyse(a) {
     <div class="layout">
       <div>
         <h3>Forces</h3>
-        <ul>${(a.forces || []).map((f) => `<li><strong>${esc(f.titre)}</strong> — ${esc(f.preuve)}</li>`).join("")}</ul>
+        <ul>${(a.forces || []).map((f) => typeof f === "string" ? `<li>${esc(f)}</li>` : `<li><strong>${esc(f.titre)}</strong> — ${esc(f.preuve)}</li>`).join("")}</ul>
         <h3>Faiblesses</h3>
-        <ul>${(a.faiblesses || []).map((f) => `<li><strong>${esc(f.titre)}</strong> — ${esc(f.preuve)}</li>`).join("")}</ul>
+        <ul>${(a.faiblesses || []).map((f) => typeof f === "string" ? `<li>${esc(f)}</li>` : `<li><strong>${esc(f.titre)}</strong> — ${esc(f.preuve)}</li>`).join("")}</ul>
       </div>
       <div>
         <h3>Risques clés</h3>
-        <ul>${(a.risques_cles || []).map((r) => `<li>${esc(r.libelle)} (criticité ${r.criticite}) — ${esc(r.mitigation || "")}</li>`).join("")}</ul>
+        <ul>${(a.risques_cles || a.risques_principaux || []).map((r) => typeof r === "string" ? `<li>${esc(r)}</li>` : `<li>${esc(r.libelle)} (criticité ${r.criticite}) — ${esc(r.mitigation || "")}</li>`).join("")}</ul>
         <h3>Vigilance Codir</h3>
         <ul>${(a.points_de_vigilance_codir || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
       </div>
