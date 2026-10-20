@@ -162,6 +162,16 @@ def _ensure_versions_table(conn):
               created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS generations (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              projet_id INTEGER NOT NULL,
+              type_doc TEXT NOT NULL,
+              moteur TEXT,
+              contenu_json TEXT NOT NULL,
+              created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         conn.commit()
     except Exception:
         pass
