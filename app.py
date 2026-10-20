@@ -270,63 +270,6 @@ def modele_excel():
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-@app.route("/api/import/excel", methods=["POST"])
-def import_excel():
-    f = request.files.get("file")
-    if not f:
-        return jsonify({"error": "fichier manquant"}), 400
-    try:
-        wb = load_workbook(f, data_only=True)
-        ws = wb.active
-        headers = [str(c.value or "").strip().lower() for c in next(ws.iter_rows(min_row=1, max_row=1))]
-        created = []
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            data = dict(zip(headers, row))
-            code = str(data.get("code") or "").strip()
-            nom = str(data.get("nom") or "").strip()
-            if not code or not nom:
-                continue
-            existing = db.q("SELECT id FROM projets WHERE code = %s", (code,))
-            if existing:
-                continue
-            pid = db.x(
-                """INSERT INTO projets (code, nom, typologie, branche, description, duree_mois, statut,
-                   investissement_k_eur, ca_annee_1_k, ca_annee_3_k, roi_pct, delai_retour_mois)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (code, nom,
-                 str(data.get("typologie") or "innovation"),
-                 str(data.get("branche") or "Groupe"),
-                 str(data.get("description") or ""),
-                 int(data.get("duree_mois") or 18),
-                 "brouillon",
-                 float(data.get("investissement_k_eur") or 0),
-                 float(data.get("ca_annee_1_k") or 0),
-                 float(data.get("ca_annee_3_k") or 0),
-                 float(data.get("roi_pct") or 0),
-                 int(data.get("delai_retour_mois") or 24)),
-            )
-            if pid:
-                created.append({"id": pid, "code": code, "nom": nom})
-        return jsonify({"imported": len(created), "projets": created})
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@app.route("/api/import/modele.xlsx")
-def modele_excel():
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "projets"
-    cols = ["code", "nom", "typologie", "branche", "description", "duree_mois",
-            "investissement_k_eur", "ca_annee_1_k", "ca_annee_3_k", "roi_pct", "delai_retour_mois"]
-    ws.append(cols)
-    ws.append(["BP-EX-09", "Exemple projet", "innovation", "Groupe", "Description courte", 18, 500, 100, 1200, 15, 24])
-    buf = io.BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    return send_file(buf, as_attachment=True, download_name="modele_projets.xlsx",
-                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
 
 @app.route("/api/projets", methods=["POST"])
 def create_projet():
