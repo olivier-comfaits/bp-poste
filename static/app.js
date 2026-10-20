@@ -46,15 +46,25 @@ const pillClass = (go) => {
 
 async function api(path, opts) {
   const base = window.BASE || "";
-  const res = await fetch(base + path, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(t || res.status);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 70000);
+  try {
+    const res = await fetch(base + path, {
+      headers: { "Content-Type": "application/json" },
+      signal: ctrl.signal,
+      ...opts,
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(t || res.status);
+    }
+    return res.json();
+  } catch (err) {
+    if (err.name === "AbortError") throw new Error("Délai dépassé (70 s). Réessayez.");
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json();
 }
 
 function show(name) {
@@ -393,7 +403,13 @@ async function sendChat() {
       method: "POST",
       body: JSON.stringify({ message: msg }),
     });
-    $("#chat-out").innerHTML = `<div class="bubble">${esc(doc.reponse)}<div class="muted">${esc(doc.impact_score)} · ${esc((doc.limites || [])[0] || "")}</div></div>`;
+    const text = doc.reponse
+      || doc.analyse
+      || doc.commentaire
+      || (doc.actions_prioritaires || []).join(" · ")
+      || JSON.stringify(doc, null, 2);
+    const impact = doc.impact_score || doc.impact_attendu || "";
+    $("#chat-out").innerHTML = `<div class="bubble">${esc(text)}<div class="muted">${esc(impact)} · ${esc((doc.limites || [])[0] || doc.moteur || "")}</div></div>`;
   } catch (err) {
     $("#chat-out").innerHTML = `<div class="bubble">${esc(err.message)}</div>`;
   }
