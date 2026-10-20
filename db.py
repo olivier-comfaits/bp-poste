@@ -170,11 +170,14 @@ def _ensure_versions_table(conn):
 def init_sqlite():
     first = not SQLITE_PATH.exists()
     conn = _sqlite_connect()
-    _ensure_versions_table(conn)
     def run_script(sql: str):
         for stmt in _split_statements(sql):
-            conn.execute(stmt)
-            conn.commit()
+            try:
+                conn.execute(stmt)
+                conn.commit()
+            except Exception as exc:
+                if "already exists" not in str(exc).lower():
+                    raise
     if first:
         run_script(_mysql_to_sqlite(SCHEMA_SQL))
         run_script(_mysql_to_sqlite(SEED_SQL))
@@ -183,16 +186,15 @@ def init_sqlite():
             n = conn.execute("SELECT COUNT(*) FROM projets").fetchone()[0]
         except Exception:
             n = 0
-        # Recharge les exemples si la base est vide ou incomplète
         if n < 8:
             conn.close()
             SQLITE_PATH.unlink(missing_ok=True)
             conn = _sqlite_connect()
             run_script(_mysql_to_sqlite(SCHEMA_SQL))
             run_script(_mysql_to_sqlite(SEED_SQL))
+    _ensure_versions_table(conn)
     conn.close()
     ENGINE["name"] = "sqlite"
-
 
 def init_db():
     if not init_mysql():
