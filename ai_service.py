@@ -664,13 +664,16 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
             '{"type":"chat","reponse":"...","propositions":[{"champ":"nom_du_champ",'
             '"valeur_actuelle":"...","valeur_suggeree":"...","justification":"..."}],'
             '"impact_score":"hausse|baisse|incertain","limites":[]}\n'
-            "Champs modifiables : description, investissement_k_eur, roi_pct, "
-            "ca_annee_1_k, ca_annee_3_k, delai_retour_mois, "
-            "risque_technique, risque_humain, risque_reglementaire, "
-            "alignement_groupe, impact_branches, impact_social, impact_environnemental.\n"
-            "Propose 2 à 4 modifications concrètes liées à la demande. "
+            "SENS QUI AMÉLIORE LE SCORE 0-100 :\n"
+            "- BAISSER (valeur plus petite = mieux) : risque_technique, risque_humain, "
+            "risque_reglementaire, complexite_operationnelle, delai_retour_mois, investissement_k_eur.\n"
+            "- HAUSSER (valeur plus grande = mieux) : alignement_groupe, impact_branches, "
+            "impact_social, impact_environnemental, maturite_technique, roi_pct, "
+            "ca_annee_1_k, ca_annee_3_k.\n"
+            "Propose 2 à 4 modifications qui AMÉLIORENT le score. "
+            "Ne propose jamais de hausser un risque ou la complexité. "
             "N'invente aucun montant : base-toi uniquement sur le dossier. "
-            "Si tu ne peux pas chiffrer, indique le champ et le sens (baisser/hausser) sans chiffre.\n\n"
+            "Si tu ne peux pas chiffrer, indique le champ et le sens sans chiffre.\n\n"
             f"Demande : {message}\n\nProjet : {payload}"
         ),
     }
