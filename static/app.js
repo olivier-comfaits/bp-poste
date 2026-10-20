@@ -403,13 +403,12 @@ async function sendChat() {
       method: "POST",
       body: JSON.stringify({ message: msg }),
     });
-    const text = doc.reponse
-      || doc.analyse
-      || doc.commentaire
-      || (doc.actions_prioritaires || []).join(" · ")
-      || JSON.stringify(doc, null, 2);
+    const props = (doc.propositions || [])
+      .map((p) => `<li><strong>${esc(p.champ)}</strong> : ${esc(p.valeur_actuelle || "–")} → ${esc(p.valeur_suggeree || "–")}<br/><span class="muted">${esc(p.justification || "")}</span></li>`)
+      .join("");
+    const text = doc.reponse || doc.analyse || "";
     const impact = doc.impact_score || doc.impact_attendu || "";
-    $("#chat-out").innerHTML = `<div class="bubble">${esc(text)}<div class="muted">${esc(impact)} · ${esc((doc.limites || [])[0] || doc.moteur || "")}</div></div>`;
+    $("#chat-out").innerHTML = `<div class="bubble">${esc(text)}${props ? `<ul>${props}</ul>` : ""}<div class="muted">${esc(impact)} · ${esc((doc.limites || [])[0] || doc.moteur || "")}</div></div>`;
   } catch (err) {
     $("#chat-out").innerHTML = `<div class="bubble">${esc(err.message)}</div>`;
   }

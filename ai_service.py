@@ -659,7 +659,20 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
             '"limites":[]}'
             "\n\nDossier : " + payload
         ),
-        "chat": f"Demande du porteur : {message}\n\nProjet : {payload}",
+        "chat": (
+            "Tu es le conseiller du porteur. Réponds en JSON strict avec :\n"
+            '{"type":"chat","reponse":"...","propositions":[{"champ":"nom_du_champ",'
+            '"valeur_actuelle":"...","valeur_suggeree":"...","justification":"..."}],'
+            '"impact_score":"hausse|baisse|incertain","limites":[]}\n'
+            "Champs modifiables : description, investissement_k_eur, roi_pct, "
+            "ca_annee_1_k, ca_annee_3_k, delai_retour_mois, "
+            "risque_technique, risque_humain, risque_reglementaire, "
+            "alignement_groupe, impact_branches, impact_social, impact_environnemental.\n"
+            "Propose 2 à 4 modifications concrètes liées à la demande. "
+            "N'invente aucun montant : base-toi uniquement sur le dossier. "
+            "Si tu ne peux pas chiffrer, indique le champ et le sens (baisser/hausser) sans chiffre.\n\n"
+            f"Demande : {message}\n\nProjet : {payload}"
+        ),
     }
     llm = _call_llm(prompts.get(kind, payload))
     if llm and not llm.get("_error"):
