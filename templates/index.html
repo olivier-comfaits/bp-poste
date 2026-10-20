@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PostePlan IA — Business plans La Poste</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">▮</span>
+      <div>
+        <div class="name">PostePlan <em>IA</em></div>
+        <div class="tag">Groupe La Poste · Executive MBA Epitech P2026</div>
+      </div>
+    </div>
+    <nav id="main-nav">
+      <button type="button" data-view="portefeuille" class="on">Portefeuille</button>
+      <button type="button" data-view="nouveau">Nouveau projet</button>
+      <button type="button" data-view="methode">Score & prompts</button>
+    </nav>
+    <div class="health" id="health">connexion…</div>
+  </header>
+
+  <main>
+    <section id="view-portefeuille" class="view on">
+      <div class="page-head">
+        <h1>Portefeuille de projets</h1>
+        <p>Huit dossiers fictifs mais réalistes. Cliquez une carte pour calculer le score, générer le business plan et la note Codir.</p>
+      </div>
+      <div class="import-row">
+        <a class="btn ghost" href="/api/import/modele.xlsx">Modèle Excel</a>
+        <input type="file" id="excel-file" accept=".xlsx" />
+        <button class="btn" id="excel-go">Importer</button>
+        <span class="muted" id="excel-msg"></span>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="grid" id="cards"></div>
+    </section>
+
+    <section id="view-dossier" class="view">
+      <button class="back" id="back">← Portefeuille</button>
+      <div id="dossier"></div>
+    </section>
+
+    <section id="view-nouveau" class="view">
+      <div class="page-head">
+        <h1>Saisir les informations clés</h1>
+        <p>Le porteur décrit le projet. Il ne note rien. L’IA évalue les 6 dimensions, l’outil calcule le score 0–100, puis enchaîne business plan, scénarios et note Codir.</p>
+      </div>
+      <form id="form-projet" class="form"></form>
+    </section>
+
+    <section id="view-methode" class="view">
+      <div class="page-head">
+        <h1>Score de pertinence & contrat IA</h1>
+      </div>
+      <div class="methode">
+        <article>
+          <h2>Formule</h2>
+          <p>Le porteur ne saisit pas le score. L’IA attribue les notes qualitatives 1–5 ; la rentabilité est déduite des montants ; le 0–100 est la somme pondérée.</p>
+          <table class="plain">
+            <thead><tr><th>Dimension</th><th>Poids</th><th>Construction</th></tr></thead>
+            <tbody>
+              <tr><td>Rentabilité</td><td>25 %</td><td>ROI + délai de retour + CA an 3 / investissement</td></tr>
+              <tr><td>Alignement stratégique</td><td>20 %</td><td>Priorité Groupe (65 %) + impact branches (35 %)</td></tr>
+              <tr><td>Maîtrise des risques</td><td>15 %</td><td>Inverse des risques technique, humain, réglementaire</td></tr>
+              <tr><td>Impact opérationnel</td><td>15 %</td><td>Impact branches − pénalité de complexité</td></tr>
+              <tr><td>Impact social / environnemental</td><td>15 %</td><td>Social 55 % + environnemental 45 %</td></tr>
+              <tr><td>Faisabilité technique</td><td>10 %</td><td>Maturité technique + maturité porteur − complexité</td></tr>
+            </tbody>
+          </table>
+          <p class="hint">Seuils Codir : ≥ 75 GO prioritaire · 60–74 GO sous conditions · 45–59 réviser · &lt; 45 NO-GO ou report.</p>
+        </article>
+        <article>
+          <h2>Contrat d’utilisation de l’IA</h2>
+          <ul>
+            <li>Sortie JSON uniquement, style neutre, aucun chiffre inventé.</li>
+            <li>Moteur <code>grok</code> si <code>XAI_API_KEY</code>, sinon <code>claude</code> si <code>ANTHROPIC_API_KEY</code>, sinon repli déterministe MySQL. Forçage : <code>LLM_PROVIDER=grok|claude|auto</code>.</li>
+            <li>Cinq prompts métier : évaluation du score, analyse, business plan, scénarios, note Codir + dialogue.</li>
+            <li>Chaque génération est historisée dans la table <code>generations</code>.</li>
+          </ul>
+          <p>Détail des prompts : fichier <code>prompts/prompts_metier.md</code>.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    PoC fonctionnel — pas un produit fini · Module SI & big data · © exercice pédagogique 2026
+  </footer>
+  <script>
+    /* Navigation de secours : active même si app.js ne charge pas. */
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-view]");
+      if (!btn) return;
+      var name = btn.getAttribute("data-view");
+      document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("on"); });
+      var el = document.getElementById("view-" + name);
+      if (el) el.classList.add("on");
+      document.querySelectorAll("#main-nav button").forEach(function (b) {
+        b.classList.toggle("on", b.getAttribute("data-view") === name);
+      });
+    });
+  </script>
+  <script src="/static/app.js?v=20261017c"></script>
+  <script>
+    window.addEventListener("error", function (ev) {
+      var h = document.getElementById("health");
+      if (h && ev.filename && ev.filename.indexOf("app.js") !== -1) {
+        h.textContent = "Erreur JS — voir F12";
+      }
+    });
+  </script>
+</body>
+</html>
