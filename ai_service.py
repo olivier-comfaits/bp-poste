@@ -666,17 +666,22 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
             "\n\nDossier : " + payload
         ),
         "chat": (
-            "Tu es le conseiller du porteur. Le porteur ne note pas son projet : "
-            "il modifie uniquement la description (et éventuellement les montants). "
-            "L'IA réévaluera ensuite les dimensions. "
+            "Tu es le conseiller du porteur. Le porteur ne note pas : il modifie la description "
+            "et, s'il le souhaite, les montants de synthèse (roi_pct, ca_annee_3_k, "
+            "investissement_k_eur, delai_retour_mois). L'IA réévalue ensuite. "
+            "Les hypothèses annuelles et les scénarios bas/médian/haut sont fournis pour contexte ; "
+            "ils n'entrent pas directement dans le score tant que les champs de synthèse ne changent pas. "
             "Réponds en JSON strict avec :\n"
-            '{"type":"chat","reponse":"...","propositions":[{"champ":"description",'
-            '"extrait_a_ajouter":"...","effet_attendu":"baisse risque_humain|hausse alignement_groupe|..."}],'
-            '"impact_score":"hausse","limites":[]}\n'
-            "Propose 2 à 3 phrases concrètes à AJOUTER à la description. "
-            "Chaque phrase doit mentionner une mitigation ou un levier qui, "
-            "à la réévaluation, fera BAISSER un risque ou HAUSSER un alignement/impact. "
-            "N'invente aucun montant. Ne propose pas de champs de notation.\n\n"
+            '{"type":"chat","reponse":"...","propositions":['
+            '{"type":"texte","extrait_a_ajouter":"...","effet_attendu":"baisse risque_humain"},'
+            '{"type":"montant","champ":"roi_pct","valeur_suggeree":"18","effet_attendu":"hausse rentabilite"}'
+            '],"impact_score":"hausse","limites":[]}\n'
+            "RÈGLES :\n"
+            "- Pour les risques, l'alignement, les impacts : propose des phrases à AJOUTER à la description.\n"
+            "- Pour la rentabilité : propose d'ajuster roi_pct (hausser), ca_annee_3_k (hausser), "
+            "investissement_k_eur (baisser) ou delai_retour_mois (baisser), en restant cohérent "
+            "avec les scénarios et hypothèses du dossier. N'invente pas de chiffre hors de ces données.\n"
+            "- 2 à 4 propositions maximum.\n\n"
             f"Demande : {message}\n\nProjet : {payload}"
         ),
     }

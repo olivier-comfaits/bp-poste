@@ -404,7 +404,12 @@ async function sendChat() {
       body: JSON.stringify({ message: msg }),
     });
     const props = (doc.propositions || [])
-      .map((p) => `<li><strong>À ajouter à la description</strong> : ${esc(p.extrait_a_ajouter || p.valeur_suggeree || "")}<br/><span class="muted">${esc(p.effet_attendu || p.justification || "")}</span></li>`)
+      .map((p) => {
+        if (p.type === "montant" || p.champ && p.champ !== "description") {
+          return `<li><strong>${esc(p.champ)}</strong> → ${esc(p.valeur_suggeree || "–")}<br/><span class="muted">${esc(p.effet_attendu || "")}</span></li>`;
+        }
+        return `<li><strong>À ajouter à la description</strong> : ${esc(p.extrait_a_ajouter || "")}<br/><span class="muted">${esc(p.effet_attendu || "")}</span></li>`;
+      })
       .join("");
     const text = doc.reponse || doc.analyse || "";
     const impact = doc.impact_score || doc.impact_attendu || "";
