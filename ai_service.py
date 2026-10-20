@@ -605,10 +605,15 @@ def _call_llm(user_prompt: str) -> dict | None:
     for name in configured_providers():
         if name not in order:
             order.append(name)
+    last_error = None
     for name in order:
         result = PROVIDERS[name](user_prompt)
-        if result:
+        if result and not result.get("_error"):
             return result
+        if result and result.get("_error"):
+            last_error = result["_error"]
+    if last_error:
+        return {"_error": last_error}
     return None
 
 
@@ -657,8 +662,16 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
         "chat": f"Demande du porteur : {message}\n\nProjet : {payload}",
     }
     llm = _call_llm(prompts.get(kind, payload))
-    if llm:
+    if llm and not llm.get("_error"):
         return llm
     if kind == "chat":
-        return fallback_chat(bundle, message or "")
+        fb = fallback_chat(bundle, message or "")
+        if llm and llm.get("_error"):
+            fb["limites"] = [f"Erreur API : {llm['_error']}"]
+            fb["reponse"] += f" [Erreur API : {llm['_error']}]"
+        return fb
+    if llm and llm.get("_error"):
+        fb = FALLBACKS[kind](bundle)
+        fb.setdefault("limites", []).append(f"Erreur API : {llm['_error']}")
+        return fb
     return FALLBACKS[kind](bundle)
