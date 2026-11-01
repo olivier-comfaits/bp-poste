@@ -203,9 +203,10 @@ function renderDossier(b) {
       <li>Note de synthèse Codir</li>
       <li>Téléchargement de la synthèse</li>
     </ol>
-    <div class="actions">
-      <button class="btn gold" id="btn-dossier">Tout enchaîner (parcours Codir)</button>
-      <button class="btn ghost" id="btn-delete" style="margin-left:auto">Supprimer le projet</button>
+    <div class="actions" style="margin-top:2rem;border-top:1px solid var(--line);padding-top:1rem">
+      <button class="btn ghost" id="btn-delete">Supprimer le projet</button>
+    </div>
+      <button class="btn" id="btn-evaluer">1. Score IA</button>
       <button class="btn" id="btn-analyse">2. Analyse</button>
       <button class="btn" id="btn-bp">3. Business plan</button>
       <button class="btn" id="btn-scen">4. Scénarios</button>
@@ -665,6 +666,24 @@ function renderForm() {
     const sel = $("#sel-typo");
     if (sel) sel.innerHTML = list.map(t => `<option>${esc(t.nom)}</option>`).join("");
   });
+  api("/api/porteurs").then(list => {
+    const sel = $("#sel-porteur");
+    if (sel) sel.innerHTML = list.map(p => `<option value="${p.id}">${esc(p.prenom)} ${esc(p.nom)}</option>`).join("");
+  });
+  const btn = $("#btn-new-porteur");
+  if (btn) btn.onclick = async () => {
+    const nom = prompt("Nom du porteur ?");
+    if (!nom) return;
+    const prenom = prompt("Prénom ?") || "";
+    const entite = prompt("Entité ?") || "Groupe";
+    const res = await api("/api/porteurs", { method: "POST", body: JSON.stringify({ nom, prenom, entite, fonction: "Porteur" }) });
+    const sel = $("#sel-porteur");
+    const opt = document.createElement("option");
+    opt.value = res.id;
+    opt.textContent = prenom + " " + nom;
+    sel.appendChild(opt);
+    sel.value = res.id;
+  };
   $("#form-projet").innerHTML = `
     <div class="form-grid">
       <label>Code<input name="code" required placeholder="BP-XXX-09" /></label>
@@ -678,7 +697,10 @@ function renderForm() {
           <option>Réseau</option><option>Numérique</option><option>Banque</option>
         </select>
       </label>
-      <label>Porteur (id)<input name="porteur_id" type="number" value="8" /></label>
+      <label>Porteur
+        <select name="porteur_id" id="sel-porteur"></select>
+        <button type="button" class="btn ghost" id="btn-new-porteur" style="margin-top:4px;font-size:.8rem">+ Nouveau</button>
+      </label>
       <label>Durée (mois)<input name="duree_mois" type="number" value="18" /></label>
       <label>Investissement k€<input name="investissement_k_eur" type="number" value="750" /></label>
       <label>CA année 1 k€<input name="ca_annee_1_k" type="number" value="120" /></label>

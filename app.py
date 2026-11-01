@@ -217,6 +217,19 @@ def health():
     })
 
 
+@app.route("/api/porteurs", methods=["POST"])
+def create_porteur():
+    body = request.get_json(force=True)
+    nom = (body.get("nom") or "").strip()
+    if not nom:
+        return jsonify({"error": "nom requis"}), 400
+    pid = db.x(
+        "INSERT INTO porteurs (nom, prenom, entite, fonction) VALUES (%s, %s, %s, %s)",
+        (nom, body.get("prenom", ""), body.get("entite", "Groupe"), body.get("fonction", "Porteur")),
+    )
+    return jsonify({"ok": True, "id": pid}), 201
+
+
 @app.route("/api/porteurs")
 def porteurs():
     return jsonify(_json(db.q("SELECT * FROM porteurs ORDER BY nom")))
@@ -282,14 +295,33 @@ def import_excel():
             existing = db.q("SELECT id FROM projets WHERE code = %s", (code,))
             if existing:
                 continue
+            typo = str(data.get("typologie") or "innovation").strip()
+            if typo:
+                exists = db.q("SELECT id FROM typologies WHERE nom = %s", (typo,))
+                if not exists:
+                    from scoring import WEIGHTS
+                    db.x("INSERT INTO typologies (nom, poids_json) VALUES (%s, %s)", (typo, json.dumps(WEIGHTS)))
+            porteur_nom = str(data.get("porteur") or "").strip()
+            porteur_id = None
+            if porteur_nom:
+                parts = porteur_nom.split(" ", 1)
+                prenom, nom_p = (parts[0], parts[1]) if len(parts) > 1 else ("", parts[0])
+                exists = db.q("SELECT id FROM porteurs WHERE nom = %s AND prenom = %s", (nom_p, prenom))
+                if exists:
+                    porteur_id = exists[0]["id"]
+                else:
+                    porteur_id = db.x(
+                        "INSERT INTO porteurs (nom, prenom, entite, fonction) VALUES (%s, %s, %s, %s)",
+                        (nom_p, prenom, "Groupe", "Porteur"),
+                    )
             pid = db.x(
-                """INSERT INTO projets (code, nom, typologie, branche, description, duree_mois, statut,
+                """INSERT INTO projets (code, nom, typologie, branche, description, porteur_id, duree_mois, statut,
                    investissement_k_eur, ca_annee_1_k, ca_annee_3_k, roi_pct, delai_retour_mois)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                (code, nom,
-                 str(data.get("typologie") or "innovation"),
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (code, nom, typo or "innovation",
                  str(data.get("branche") or "Groupe"),
                  str(data.get("description") or ""),
+                 porteur_id,
                  int(data.get("duree_mois") or 18),
                  "brouillon",
                  float(data.get("investissement_k_eur") or 0),
