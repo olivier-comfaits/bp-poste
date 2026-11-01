@@ -205,7 +205,7 @@ function renderDossier(b) {
     </ol>
     <div class="actions">
       <button class="btn gold" id="btn-dossier">Tout enchaîner (parcours Codir)</button>
-      <button class="btn" id="btn-evaluer">1. Score IA</button>
+      <button class="btn ghost" id="btn-delete" style="margin-left:auto">Supprimer le projet</button>
       <button class="btn" id="btn-analyse">2. Analyse</button>
       <button class="btn" id="btn-bp">3. Business plan</button>
       <button class="btn" id="btn-scen">4. Scénarios</button>
@@ -309,6 +309,12 @@ function renderDossier(b) {
     if (doc.score) state.dossier.score = doc.score;
     renderLivrables(doc);
     loadVersions(p.id);
+  };
+  $("#btn-delete").onclick = async () => {
+    if (!confirm("Supprimer définitivement ce projet ?")) return;
+    await api("/api/projets/" + p.id, { method: "DELETE" });
+    show("portefeuille");
+    loadProjets();
   };
   $("#btn-evaluer").onclick = async () => {
     setBusy("Évaluation IA du score…");

@@ -496,6 +496,12 @@ def _restore(pid: int, vid: int):
     return bundle(pid)
 
 
+@app.route("/api/projets/<int:pid>", methods=["DELETE"])
+def delete_projet(pid):
+    db.x("DELETE FROM projets WHERE id = %s", (pid,))
+    return jsonify({"ok": True})
+
+
 @app.route("/api/projets/<int:pid>", methods=["PUT"])
 def update_projet(pid):
     body = request.get_json(force=True, silent=True) or {}
