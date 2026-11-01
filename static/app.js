@@ -203,7 +203,14 @@ function renderDossier(b) {
       <li>Note de synthèse Codir</li>
       <li>Téléchargement de la synthèse</li>
     </ol>
-    <div class="actions" style="margin-top:2rem;border-top:1px solid var(--line);padding-top:1rem">
+    <div class="actions">
+      <button class="btn gold" id="btn-dossier">Tout enchaîner (parcours Codir)</button>
+      <button class="btn" id="btn-evaluer">1. Score IA</button>
+      <button class="btn" id="btn-analyse">2. Analyse</button>
+      <button class="btn" id="btn-bp">3. Business plan</button>
+      <button class="btn" id="btn-scen">4. Scénarios</button>
+      <button class="btn" id="btn-note">5. Note Codir</button>
+    </div>
       <button class="btn ghost" id="btn-delete">Supprimer le projet</button>
     </div>
       <button class="btn" id="btn-evaluer">1. Score IA</button>
@@ -662,6 +669,23 @@ async function renderTypologies() {
 }
 
 function renderForm() {
+  $("#form-projet").innerHTML = `
+    <div class="form-grid">
+      <label>Code<input name="code" required placeholder="BP-XXX-09" /></label>
+      <label>Nom<input name="nom" required placeholder="Nom du projet" /></label>
+      <label>Typologie
+        <select name="typologie" id="sel-typo"></select>
+      </label>
+      <label>Branche
+        <select name="branche">
+          <option>Groupe</option><option>Courrier</option><option>Colis</option>
+          <option>Réseau</option><option>Numérique</option><option>Banque</option>
+        </select>
+      </label>
+      <label>Porteur
+        <select name="porteur_id" id="sel-porteur"></select>
+        <button type="button" class="btn ghost" id="btn-new-porteur" style="margin-top:4px;font-size:.8rem">+ Nouveau</button>
+      </label>
   api("/api/typologies").then(list => {
     const sel = $("#sel-typo");
     if (sel) sel.innerHTML = list.map(t => `<option>${esc(t.nom)}</option>`).join("");
@@ -670,20 +694,22 @@ function renderForm() {
     const sel = $("#sel-porteur");
     if (sel) sel.innerHTML = list.map(p => `<option value="${p.id}">${esc(p.prenom)} ${esc(p.nom)}</option>`).join("");
   });
-  const btn = $("#btn-new-porteur");
-  if (btn) btn.onclick = async () => {
-    const nom = prompt("Nom du porteur ?");
-    if (!nom) return;
-    const prenom = prompt("Prénom ?") || "";
-    const entite = prompt("Entité ?") || "Groupe";
-    const res = await api("/api/porteurs", { method: "POST", body: JSON.stringify({ nom, prenom, entite, fonction: "Porteur" }) });
-    const sel = $("#sel-porteur");
-    const opt = document.createElement("option");
-    opt.value = res.id;
-    opt.textContent = prenom + " " + nom;
-    sel.appendChild(opt);
-    sel.value = res.id;
-  };
+  setTimeout(() => {
+    const btn = $("#btn-new-porteur");
+    if (btn) btn.onclick = async () => {
+      const nom = prompt("Nom du porteur ?");
+      if (!nom) return;
+      const prenom = prompt("Prénom ?") || "";
+      const entite = prompt("Entité ?") || "Groupe";
+      const res = await api("/api/porteurs", { method: "POST", body: JSON.stringify({ nom, prenom, entite, fonction: "Porteur" }) });
+      const sel = $("#sel-porteur");
+      const opt = document.createElement("option");
+      opt.value = res.id;
+      opt.textContent = prenom + " " + nom;
+      sel.appendChild(opt);
+      sel.value = res.id;
+    };
+  }, 100);
   $("#form-projet").innerHTML = `
     <div class="form-grid">
       <label>Code<input name="code" required placeholder="BP-XXX-09" /></label>
