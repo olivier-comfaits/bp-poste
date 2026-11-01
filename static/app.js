@@ -118,7 +118,7 @@ async function loadProjets() {
     $("#cards").innerHTML = `<p class="muted">Erreur : ${err.message}</p>`;
     return;
   }
-  const types = ["tous", ...new Set(state.projets.map((p) => p.typologie))];
+  const types = ["tous", ...(await api("/api/typologies")).map(t => t.nom)];
   $("#filters").innerHTML = types
     .map((t) => `<button data-f="${t}" class="${t === state.filter ? "on" : ""}">${t}</button>`)
     .join("");
@@ -655,15 +655,16 @@ async function renderTypologies() {
 }
 
 function renderForm() {
+  api("/api/typologies").then(list => {
+    const sel = $("#sel-typo");
+    if (sel) sel.innerHTML = list.map(t => `<option>${esc(t.nom)}</option>`).join("");
+  });
   $("#form-projet").innerHTML = `
     <div class="form-grid">
       <label>Code<input name="code" required placeholder="BP-XXX-09" /></label>
       <label>Nom<input name="nom" required placeholder="Nom du projet" /></label>
       <label>Typologie
-        <select name="typologie">
-          <option>innovation</option><option>RH</option><option>digital</option>
-          <option>logistique</option><option>territorial</option><option>RSE</option><option>client</option>
-        </select>
+        <select name="typologie" id="sel-typo"></select>
       </label>
       <label>Branche
         <select name="branche">
