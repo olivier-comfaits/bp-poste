@@ -210,14 +210,6 @@ function renderDossier(b) {
       <button class="btn" id="btn-bp">3. Business plan</button>
       <button class="btn" id="btn-scen">4. Scénarios</button>
       <button class="btn" id="btn-note">5. Note Codir</button>
-    </div>
-      <button class="btn ghost" id="btn-delete">Supprimer le projet</button>
-    </div>
-      <button class="btn" id="btn-evaluer">1. Score IA</button>
-      <button class="btn" id="btn-analyse">2. Analyse</button>
-      <button class="btn" id="btn-bp">3. Business plan</button>
-      <button class="btn" id="btn-scen">4. Scénarios</button>
-      <button class="btn" id="btn-note">5. Note Codir</button>
       <a class="btn ghost" href="${window.BASE || ""}/api/projets/${p.id}/export.txt">Télécharger la synthèse</a>
     </div>
     <p class="muted">Chaque bouton numéroté exécute un seul prompt. « Tout enchaîner » les lance dans l’ordre.</p>
@@ -296,6 +288,9 @@ function renderDossier(b) {
     <div class="panel" style="margin-top:16px" id="livrables">
       <h2>Livrables générés</h2>
       <p class="muted">Le parcours Codir évalue le score, rédige le business plan, propose les scénarios et produit la note téléchargeable.</p>
+    </div>
+    <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--line)">
+      <button class="btn ghost" id="btn-delete">Supprimer le projet</button>
     </div>
   `;
 
