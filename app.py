@@ -720,13 +720,20 @@ def export_txt(pid):
 def main():
     engine = db.init_db()
     print(f"PostePlan IA prêt — base {engine}")
-    # pré-calcule les scores
-    for row in db.q("SELECT id FROM projets"):
-        b = bundle(row["id"])
-        if b:
-            db.x("UPDATE projets SET score_pertinence = %s WHERE id = %s",
-                 (b["score"]["score"], row["id"]))
-    port = int(__import__("os").environ.get("PORT", "8080"))
+    # Pré-calcul des scores en arrière-plan pour ne pas bloquer le bind du port
+    import threading
+    def _precalc():
+        try:
+            for row in db.q("SELECT id FROM projets"):
+                b = bundle(row["id"])
+                if b:
+                    db.x("UPDATE projets SET score_pertinence = %s WHERE id = %s",
+                         (b["score"]["score"], row["id"]))
+        except Exception as e:
+            print(f"Pré-calcul scores : {e}")
+    threading.Thread(target=_precalc, daemon=True).start()
+    port = int(os.environ.get("PORT", "8080"))
+    print(f"Binding on 0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port, debug=False)
 
 
