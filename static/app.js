@@ -595,51 +595,43 @@ async function renderTypologies() {
   const list = await api("/api/typologies");
   if (!list.length) { $("#typo-list").innerHTML = "<p>Aucune typologie.</p>"; return; }
   const dims = ["rentabilite","alignement_strategique","risque","impact_operationnel","impact_social_env","faisabilite_technique"];
-  const labels = {rentabilite:"Rentabilité",alignement_strategique:"Alignement",risque:"Risques",impact_operationnel:"Impact op.",impact_social_env:"Social/env.",faisabilite_technique:"Faisabilité"};
-  let current = list[0].id;
-  const draw = () => {
-    const t = list.find(x => x.id === current) || list[0];
-    const btns = list.map(x => `<button class="btn ${x.id===current?"gold":""}" data-tid="${x.id}">${esc(x.nom)}</button>`).join("");
-    const sliders = dims.map(d => {
-      const v = Math.round((t.poids[d]||0)*100);
-      return `<label style="display:block;margin:.6rem 0">${labels[d]}
-        <input type="range" class="poids" data-dim="${d}" min="0" max="100" value="${v}" style="width:100%" />
-        <span class="pval">${v} %</span></label>`;
-    }).join("");
-    $("#typo-list").innerHTML = `
-      <div class="filters" style="margin-bottom:1rem">${btns}</div>
-      <div class="panel" data-id="${t.id}">
-        <h2>${esc(t.nom)}</h2>
-        ${sliders}
-        <div class="row" style="margin-top:1rem">
-          <span class="muted typo-sum">Somme : 100 %</span>
-          <button class="btn gold typo-save">Enregistrer</button>
-          <button class="btn ghost typo-del">Supprimer</button>
-        </div>
-      </div>`;
-    $$(".filters button").forEach(b => b.onclick = () => { current = +b.dataset.tid; draw(); });
-    $$(".poids").forEach(i => i.oninput = () => {
-      i.nextElementSibling.textContent = i.value + " %";
-      const sum = [...$$(".poids")].reduce((a,c) => a + Number(c.value), 0);
-      $(".typo-sum").textContent = "Somme : " + sum + " %";
-      $(".typo-sum").style.color = Math.abs(sum-100) > 1 ? "#e74c3c" : "";
-    });
-    $(".typo-save").onclick = async () => {
-      const poids = {};
-      $$(".poids").forEach(i => poids[i.dataset.dim] = Number(i.value) / 100);
-      const sum = Object.values(poids).reduce((a,c) => a+c, 0);
-      if (Math.abs(sum - 1) > 0.01) { alert("La somme doit être 100 %"); return; }
-      await api("/api/typologies/" + t.id, { method: "PUT", body: JSON.stringify({ poids }) });
-      const idx = list.findIndex(x => x.id === t.id);
-      if (idx >= 0) list[idx].poids = poids;
-    };
-    $(".typo-del").onclick = async () => {
-      if (!confirm("Supprimer " + t.nom + " ?")) return;
-      await api("/api/typologies/" + t.id, { method: "DELETE" });
-      renderTypologies();
-    };
-  };
-  draw();
+  const labels = {rentabilite:"Rentab.",alignement_strategique:"Align.",risque:"Risques",impact_operationnel:"Impact",impact_social_env:"Social",faisabilite_technique:"Faisab."};
+  $("#typo-list").innerHTML = `<div class="cards">${list.map(t => `
+    <article class="card" data-id="${t.id}">
+      <h3>${esc(t.nom)}</h3>
+      ${dims.map(d => `<label style="display:block;font-size:.85rem;margin:.3rem 0">${labels[d]}
+        <input type="range" class="poids" data-dim="${d}" min="0" max="100" value="${Math.round((t.poids[d]||0)*100)}" style="width:100%" />
+        <span class="pval">${Math.round((t.poids[d]||0)*100)}%</span></label>`).join("")}
+      <div class="row" style="margin-top:.5rem">
+        <span class="muted typo-sum">100%</span>
+        <button class="btn gold typo-save" style="font-size:.8rem;padding:.3rem .6rem">OK</button>
+        <button class="btn ghost typo-del" style="font-size:.8rem;padding:.3rem .6rem">✕</button>
+      </div>
+    </article>`).join("")}</div>`;
+  $$(".poids").forEach(i => i.oninput = () => {
+    i.nextElementSibling.textContent = i.value + "%";
+    const card = i.closest(".card");
+    const sum = [...card.querySelectorAll(".poids")].reduce((a,c) => a + Number(c.value), 0);
+    const el = card.querySelector(".typo-sum");
+    el.textContent = sum + "%";
+    el.style.color = Math.abs(sum-100) > 1 ? "#e74c3c" : "";
+  });
+  $$(".typo-save").forEach(b => b.onclick = async () => {
+    const card = b.closest(".card");
+    const poids = {};
+    card.querySelectorAll(".poids").forEach(i => poids[i.dataset.dim] = Number(i.value) / 100);
+    const sum = Object.values(poids).reduce((a,c) => a+c, 0);
+    if (Math.abs(sum - 1) > 0.01) { alert("Somme = 100 % requis"); return; }
+    await api("/api/typologies/" + card.dataset.id, { method: "PUT", body: JSON.stringify({ poids }) });
+    b.textContent = "✓";
+    setTimeout(() => b.textContent = "OK", 800);
+  });
+  $$(".typo-del").forEach(b => b.onclick = async () => {
+    const card = b.closest(".card");
+    if (!confirm("Supprimer ?")) return;
+    await api("/api/typologies/" + card.dataset.id, { method: "DELETE" });
+    renderTypologies();
+  });
   const form = $("#typo-add");
   if (form && !form.dataset.bound) {
     form.dataset.bound = "1";
