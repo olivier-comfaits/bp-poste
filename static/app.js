@@ -596,7 +596,7 @@ async function renderTypologies() {
   if (!list.length) { $("#typo-list").innerHTML = "<p>Aucune typologie.</p>"; return; }
   const dims = ["rentabilite","alignement_strategique","risque","impact_operationnel","impact_social_env","faisabilite_technique"];
   const labels = {rentabilite:"Rentab.",alignement_strategique:"Align.",risque:"Risques",impact_operationnel:"Impact",impact_social_env:"Social",faisabilite_technique:"Faisab."};
-  $("#typo-list").innerHTML = `<div class="cards">${list.map(t => `
+  $("#typo-list").innerHTML = `<div class="typo-grid">${list.map(t => `
     <article class="card" data-id="${t.id}">
       <h3>${esc(t.nom)}</h3>
       ${dims.map(d => `<label style="display:block;font-size:.85rem;margin:.3rem 0">${labels[d]}
