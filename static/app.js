@@ -593,35 +593,53 @@ function esc(s) {
 
 async function renderTypologies() {
   const list = await api("/api/typologies");
+  if (!list.length) { $("#typo-list").innerHTML = "<p>Aucune typologie.</p>"; return; }
   const dims = ["rentabilite","alignement_strategique","risque","impact_operationnel","impact_social_env","faisabilite_technique"];
   const labels = {rentabilite:"Rentabilité",alignement_strategique:"Alignement",risque:"Risques",impact_operationnel:"Impact op.",impact_social_env:"Social/env.",faisabilite_technique:"Faisabilité"};
-  $("#typo-list").innerHTML = list.map(t => `
-    <div class="panel" data-id="${t.id}">
-      <div class="row"><strong>${esc(t.nom)}</strong>
-        <button class="btn ghost typo-del" data-id="${t.id}">Supprimer</button></div>
-      <div class="form-grid" style="margin-top:.5rem">
-        ${dims.map(d => `<label>${labels[d]} %<input type="number" class="poids" data-dim="${d}" value="${Math.round((t.poids[d]||0)*100)}" min="0" max="100" /></label>`).join("")}
-      </div>
-      <div class="row" style="margin-top:.5rem">
-        <span class="muted typo-sum">Somme : 100 %</span>
-        <button class="btn gold typo-save" data-id="${t.id}">Enregistrer</button>
-      </div>
-    </div>
-  `).join("");
-  $$(".typo-del").forEach(b => b.onclick = async () => {
-    if (!confirm("Supprimer cette typologie ?")) return;
-    await api("/api/typologies/" + b.dataset.id, { method: "DELETE" });
-    renderTypologies();
-  });
-  $$(".typo-save").forEach(b => b.onclick = async () => {
-    const panel = b.closest(".panel");
-    const poids = {};
-    panel.querySelectorAll(".poids").forEach(i => poids[i.dataset.dim] = Number(i.value) / 100);
-    const sum = Object.values(poids).reduce((a,c) => a+c, 0);
-    if (Math.abs(sum - 1) > 0.01) { alert("La somme doit être 100 % (actuellement " + Math.round(sum*100) + " %)"); return; }
-    await api("/api/typologies/" + b.dataset.id, { method: "PUT", body: JSON.stringify({ poids }) });
-    renderTypologies();
-  });
+  let current = list[0].id;
+  const draw = () => {
+    const t = list.find(x => x.id === current) || list[0];
+    const btns = list.map(x => `<button class="btn ${x.id===current?"gold":""}" data-tid="${x.id}">${esc(x.nom)}</button>`).join("");
+    const sliders = dims.map(d => {
+      const v = Math.round((t.poids[d]||0)*100);
+      return `<label style="display:block;margin:.6rem 0">${labels[d]}
+        <input type="range" class="poids" data-dim="${d}" min="0" max="100" value="${v}" style="width:100%" />
+        <span class="pval">${v} %</span></label>`;
+    }).join("");
+    $("#typo-list").innerHTML = `
+      <div class="filters" style="margin-bottom:1rem">${btns}</div>
+      <div class="panel" data-id="${t.id}">
+        <h2>${esc(t.nom)}</h2>
+        ${sliders}
+        <div class="row" style="margin-top:1rem">
+          <span class="muted typo-sum">Somme : 100 %</span>
+          <button class="btn gold typo-save">Enregistrer</button>
+          <button class="btn ghost typo-del">Supprimer</button>
+        </div>
+      </div>`;
+    $$(".filters button").forEach(b => b.onclick = () => { current = +b.dataset.tid; draw(); });
+    $$(".poids").forEach(i => i.oninput = () => {
+      i.nextElementSibling.textContent = i.value + " %";
+      const sum = [...$$(".poids")].reduce((a,c) => a + Number(c.value), 0);
+      $(".typo-sum").textContent = "Somme : " + sum + " %";
+      $(".typo-sum").style.color = Math.abs(sum-100) > 1 ? "#e74c3c" : "";
+    });
+    $(".typo-save").onclick = async () => {
+      const poids = {};
+      $$(".poids").forEach(i => poids[i.dataset.dim] = Number(i.value) / 100);
+      const sum = Object.values(poids).reduce((a,c) => a+c, 0);
+      if (Math.abs(sum - 1) > 0.01) { alert("La somme doit être 100 %"); return; }
+      await api("/api/typologies/" + t.id, { method: "PUT", body: JSON.stringify({ poids }) });
+      const idx = list.findIndex(x => x.id === t.id);
+      if (idx >= 0) list[idx].poids = poids;
+    };
+    $(".typo-del").onclick = async () => {
+      if (!confirm("Supprimer " + t.nom + " ?")) return;
+      await api("/api/typologies/" + t.id, { method: "DELETE" });
+      renderTypologies();
+    };
+  };
+  draw();
   const form = $("#typo-add");
   if (form && !form.dataset.bound) {
     form.dataset.bound = "1";
