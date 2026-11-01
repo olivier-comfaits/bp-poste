@@ -39,6 +39,17 @@ def _json(value):
     return value
 
 
+def _weights_for(typologie: str) -> dict:
+    from scoring import WEIGHTS
+    rows = db.q("SELECT poids_json FROM typologies WHERE nom = %s", (typologie,))
+    if rows:
+        try:
+            return json.loads(rows[0]["poids_json"])
+        except Exception:
+            pass
+    return WEIGHTS
+
+
 def bundle(projet_id: int) -> dict | None:
     projets = db.q(
         """
@@ -84,7 +95,7 @@ def bundle(projet_id: int) -> dict | None:
     # SQLite n'a pas FIELD() — fallback
     if scenarios is None:
         scenarios = []
-    score = compute_score(p)
+    score = compute_score(p, _weights_for(p.get("typologie")))
     return {
         "projet": p,
         "porteur": {
@@ -151,6 +162,47 @@ def index():
     html = html.replace('href="/api/', f'href="{base}/api/')
     html = html.replace("</head>", f'<script>window.BASE="{base}";</script></head>')
     return Response(html, mimetype="text/html")
+
+
+@app.route("/api/typologies")
+def list_typologies():
+    rows = db.q("SELECT * FROM typologies ORDER BY nom")
+    for r in rows:
+        r["poids"] = json.loads(r.get("poids_json") or "{}")
+    return jsonify(rows)
+
+
+@app.route("/api/typologies", methods=["POST"])
+def create_typologie():
+    body = request.get_json(force=True)
+    nom = (body.get("nom") or "").strip()
+    if not nom:
+        return jsonify({"error": "nom requis"}), 400
+    from scoring import WEIGHTS
+    poids = body.get("poids") or WEIGHTS
+    if abs(sum(poids.values()) - 1.0) > 0.01:
+        return jsonify({"error": "la somme des poids doit être 100 %"}), 400
+    db.x("INSERT INTO typologies (nom, poids_json) VALUES (%s, %s)", (nom, json.dumps(poids)))
+    return jsonify({"ok": True, "nom": nom}), 201
+
+
+@app.route("/api/typologies/<int:tid>", methods=["PUT"])
+def update_typologie(tid):
+    body = request.get_json(force=True)
+    poids = body.get("poids")
+    if poids and abs(sum(poids.values()) - 1.0) > 0.01:
+        return jsonify({"error": "la somme des poids doit être 100 %"}), 400
+    if poids:
+        db.x("UPDATE typologies SET poids_json = %s WHERE id = %s", (json.dumps(poids), tid))
+    if body.get("nom"):
+        db.x("UPDATE typologies SET nom = %s WHERE id = %s", (body["nom"], tid))
+    return jsonify({"ok": True})
+
+
+@app.route("/api/typologies/<int:tid>", methods=["DELETE"])
+def delete_typologie(tid):
+    db.x("DELETE FROM typologies WHERE id = %s", (tid,))
+    return jsonify({"ok": True})
 
 
 @app.route("/api/health")
@@ -482,7 +534,7 @@ def _evaluer_et_sauver(pid: int, b: dict):
         f"UPDATE projets SET {sets} WHERE id = %s",
         tuple(updated[k] for k in RATING_FIELDS) + (pid,),
     )
-    score = compute_score(updated)
+    score = compute_score(updated, _weights_for(updated.get("typologie")))
     db.x("UPDATE projets SET score_pertinence = %s WHERE id = %s", (score["score"], pid))
     _save_generation(pid, "evaluation", evaluation)
     return evaluation, score

@@ -77,6 +77,7 @@ function show(name) {
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#main-nav [data-view], nav [data-view]");
   if (btn && btn.dataset.view === "nouveau") renderForm();
+  if (btn && btn.dataset.view === "typologies") renderTypologies();
   if (e.target.closest("#back")) show("portefeuille");
 });
 
@@ -588,6 +589,51 @@ function esc(s) {
     .replaceAll("&", "&")
     .replaceAll("<", "<")
     .replaceAll(">", ">");
+}
+
+async function renderTypologies() {
+  const list = await api("/api/typologies");
+  const dims = ["rentabilite","alignement_strategique","risque","impact_operationnel","impact_social_env","faisabilite_technique"];
+  const labels = {rentabilite:"Rentabilité",alignement_strategique:"Alignement",risque:"Risques",impact_operationnel:"Impact op.",impact_social_env:"Social/env.",faisabilite_technique:"Faisabilité"};
+  $("#typo-list").innerHTML = list.map(t => `
+    <div class="panel" data-id="${t.id}">
+      <div class="row"><strong>${esc(t.nom)}</strong>
+        <button class="btn ghost typo-del" data-id="${t.id}">Supprimer</button></div>
+      <div class="form-grid" style="margin-top:.5rem">
+        ${dims.map(d => `<label>${labels[d]} %<input type="number" class="poids" data-dim="${d}" value="${Math.round((t.poids[d]||0)*100)}" min="0" max="100" /></label>`).join("")}
+      </div>
+      <div class="row" style="margin-top:.5rem">
+        <span class="muted typo-sum">Somme : 100 %</span>
+        <button class="btn gold typo-save" data-id="${t.id}">Enregistrer</button>
+      </div>
+    </div>
+  `).join("");
+  $$(".typo-del").forEach(b => b.onclick = async () => {
+    if (!confirm("Supprimer cette typologie ?")) return;
+    await api("/api/typologies/" + b.dataset.id, { method: "DELETE" });
+    renderTypologies();
+  });
+  $$(".typo-save").forEach(b => b.onclick = async () => {
+    const panel = b.closest(".panel");
+    const poids = {};
+    panel.querySelectorAll(".poids").forEach(i => poids[i.dataset.dim] = Number(i.value) / 100);
+    const sum = Object.values(poids).reduce((a,c) => a+c, 0);
+    if (Math.abs(sum - 1) > 0.01) { alert("La somme doit être 100 % (actuellement " + Math.round(sum*100) + " %)"); return; }
+    await api("/api/typologies/" + b.dataset.id, { method: "PUT", body: JSON.stringify({ poids }) });
+    renderTypologies();
+  });
+  const form = $("#typo-add");
+  if (form && !form.dataset.bound) {
+    form.dataset.bound = "1";
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const nom = form.nom.value.trim();
+      if (!nom) return;
+      await api("/api/typologies", { method: "POST", body: JSON.stringify({ nom }) });
+      form.reset();
+      renderTypologies();
+    };
+  }
 }
 
 function renderForm() {

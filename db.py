@@ -177,6 +177,31 @@ def _ensure_versions_table(conn):
         pass
 
 
+def _ensure_typologies_table(conn):
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS typologies (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              nom TEXT NOT NULL UNIQUE,
+              poids_json TEXT NOT NULL,
+              created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        n = conn.execute("SELECT COUNT(*) FROM typologies").fetchone()[0]
+        if n == 0:
+            import json
+            from scoring import WEIGHTS, DEFAULT_TYPOLOGIES
+            for t in DEFAULT_TYPOLOGIES:
+                conn.execute(
+                    "INSERT INTO typologies (nom, poids_json) VALUES (?, ?)",
+                    (t, json.dumps(WEIGHTS)),
+                )
+            conn.commit()
+    except Exception:
+        pass
+
+
 def init_sqlite():
     first = not SQLITE_PATH.exists()
     conn = _sqlite_connect()
@@ -203,6 +228,7 @@ def init_sqlite():
             run_script(_mysql_to_sqlite(SCHEMA_SQL))
             run_script(_mysql_to_sqlite(SEED_SQL))
     _ensure_versions_table(conn)
+    _ensure_typologies_table(conn)
     conn.close()
     ENGINE["name"] = "sqlite"
 

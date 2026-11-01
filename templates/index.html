@@ -18,7 +18,7 @@
     <nav id="main-nav">
       <button type="button" data-view="portefeuille" class="on">Portefeuille</button>
       <button type="button" data-view="nouveau">Nouveau projet</button>
-      <button type="button" data-view="methode">Score & prompts</button>
+      <button type="button" data-view="typologies">Typologies</button>
     </nav>
     <div class="health" id="health">connexion…</div>
   </header>
@@ -84,6 +84,18 @@
           <p>Détail des prompts : fichier <code>prompts/prompts_metier.md</code>.</p>
         </article>
       </div>
+    </section>
+
+    <section id="view-typologies" class="view">
+      <div class="page-head">
+        <h1>Typologies et poids</h1>
+      </div>
+      <div id="typo-list"></div>
+      <form id="typo-add" class="panel" style="margin-top:1rem">
+        <h2>Ajouter une typologie</h2>
+        <label>Nom <input name="nom" required placeholder="ex. data" /></label>
+        <button class="btn gold" type="submit">Ajouter (poids par défaut)</button>
+      </form>
     </section>
   </main>
 

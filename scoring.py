@@ -20,6 +20,10 @@ WEIGHTS = {
     "faisabilite_technique": 0.10,
 }
 
+DEFAULT_TYPOLOGIES = [
+    "innovation", "RH", "digital", "logistique", "territorial", "RSE", "client"
+]
+
 
 def _clamp(value: float, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo, min(hi, value))
@@ -105,18 +109,24 @@ LABELS = {
 }
 
 
-def compute_score(projet: dict) -> dict:
+def compute_score(projet: dict, weights: dict | None = None) -> dict:
+    w = weights or WEIGHTS
+    # Normalise si la somme n'est pas exactement 1
+    total_w = sum(w.values()) or 1
+    w = {k: v / total_w for k, v in w.items()}
+
     dimensions = {}
     total = 0.0
     for key, fn in DIMENSION_FNS.items():
         value = round(fn(projet), 1)
+        weight = w.get(key, WEIGHTS.get(key, 0))
         dimensions[key] = {
             "label": LABELS[key],
             "value": value,
-            "weight": WEIGHTS[key],
-            "contribution": round(value * WEIGHTS[key], 2),
+            "weight": weight,
+            "contribution": round(value * weight, 2),
         }
-        total += value * WEIGHTS[key]
+        total += value * weight
     total = round(_clamp(total), 1)
 
     if total >= 75:
