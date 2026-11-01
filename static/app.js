@@ -686,6 +686,19 @@ function renderForm() {
         <select name="porteur_id" id="sel-porteur"></select>
         <button type="button" class="btn ghost" id="btn-new-porteur" style="margin-top:4px;font-size:.8rem">+ Nouveau</button>
       </label>
+      <label>Durée (mois)<input name="duree_mois" type="number" value="18" /></label>
+      <label>Investissement k€<input name="investissement_k_eur" type="number" value="750" /></label>
+      <label>CA année 1 k€<input name="ca_annee_1_k" type="number" value="120" /></label>
+      <label>CA année 3 k€<input name="ca_annee_3_k" type="number" value="1800" /></label>
+      <label>ROI estimé %<input name="roi_pct" type="number" step="0.1" value="15" /></label>
+      <label>Délai de retour (mois)<input name="delai_retour_mois" type="number" value="24" /></label>
+    </div>
+    <label>Description du projet<textarea name="description" placeholder="Contexte, objectif, périmètre, valeur attendue…"></textarea></label>
+    <label>Alignement / priorité Groupe perçue<textarea name="priorite_groupe" placeholder="En quoi le projet sert une priorité Groupe ?"></textarea></label>
+    <label>Avantage et opportunité de marché<textarea name="opportunite_marche" placeholder="Cible, alternative interne, différenciation…"></textarea></label>
+    <button class="btn gold" type="submit">Enregistrer — l’IA calcule le score</button>
+    <p class="hint" id="form-msg"></p>
+  `;
   api("/api/typologies").then(list => {
     const sel = $("#sel-typo");
     if (sel) sel.innerHTML = list.map(t => `<option>${esc(t.nom)}</option>`).join("");
@@ -710,36 +723,6 @@ function renderForm() {
       sel.value = res.id;
     };
   }, 100);
-  $("#form-projet").innerHTML = `
-    <div class="form-grid">
-      <label>Code<input name="code" required placeholder="BP-XXX-09" /></label>
-      <label>Nom<input name="nom" required placeholder="Nom du projet" /></label>
-      <label>Typologie
-        <select name="typologie" id="sel-typo"></select>
-      </label>
-      <label>Branche
-        <select name="branche">
-          <option>Groupe</option><option>Courrier</option><option>Colis</option>
-          <option>Réseau</option><option>Numérique</option><option>Banque</option>
-        </select>
-      </label>
-      <label>Porteur
-        <select name="porteur_id" id="sel-porteur"></select>
-        <button type="button" class="btn ghost" id="btn-new-porteur" style="margin-top:4px;font-size:.8rem">+ Nouveau</button>
-      </label>
-      <label>Durée (mois)<input name="duree_mois" type="number" value="18" /></label>
-      <label>Investissement k€<input name="investissement_k_eur" type="number" value="750" /></label>
-      <label>CA année 1 k€<input name="ca_annee_1_k" type="number" value="120" /></label>
-      <label>CA année 3 k€<input name="ca_annee_3_k" type="number" value="1800" /></label>
-      <label>ROI estimé %<input name="roi_pct" type="number" step="0.1" value="15" /></label>
-      <label>Délai de retour (mois)<input name="delai_retour_mois" type="number" value="24" /></label>
-    </div>
-    <label>Description du projet<textarea name="description" placeholder="Contexte, objectif, périmètre, valeur attendue…"></textarea></label>
-    <label>Alignement / priorité Groupe perçue<textarea name="priorite_groupe" placeholder="En quoi le projet sert une priorité Groupe ?"></textarea></label>
-    <label>Avantage et opportunité de marché<textarea name="opportunite_marche" placeholder="Cible, alternative interne, différenciation…"></textarea></label>
-    <button class="btn gold" type="submit">Enregistrer — l’IA calcule le score</button>
-    <p class="hint" id="form-msg"></p>
-  `;
   $("#form-projet").onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
