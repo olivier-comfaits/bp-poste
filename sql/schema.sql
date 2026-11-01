@@ -22,6 +22,8 @@ CREATE TABLE typologies (
   poids_json TEXT NOT NULL COMMENT 'JSON des 6 poids, somme = 1',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+CREATE TABLE porteurs (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   nom           VARCHAR(120) NOT NULL,
   prenom        VARCHAR(120) NOT NULL,
