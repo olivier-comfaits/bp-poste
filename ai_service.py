@@ -626,17 +626,37 @@ def generate(kind: str, bundle: dict, message: str | None = None) -> dict:
             + payload
         ),
         "business_plan": (
-            "Rédige un business plan en 10 sections JSON. "
-            "N'invente aucun montant absent des données. "
+            "Rédige un business plan. Réponds UNIQUEMENT avec ce JSON exact : "
+            '{"type":"business_plan","sections":{'
+            '"resume_executif":{"texte":"...","go_suggere":"GO"},'
+            '"description_projet":{"contexte":"...","objectifs":["..."]},'
+            '"analyse_strategique":{"alignement":"...","avantage":"..."},'
+            '"analyse_marche":{"cible":"...","tendances":["..."]},'
+            '"analyse_concurrentielle":{"facteurs_differenciants":["..."]},'
+            '"modele_economique":{"logique_de_valeur":"...","sources_recettes":["..."]},'
+            '"hypotheses_financieres":{"commentaire":"..."},'
+            '"scenarios":{"commentaire_transversal":"..."},'
+            '"plan_action":{"jalons_90_jours":["..."],"jalons_12_mois":["..."]},'
+            '"synthese_codir":{"en_une_phrase":"..."}}}'
+            " N'invente aucun montant absent des données. "
             + payload
         ),
         "scenarios": (
-            "Commente les 3 scénarios financiers sans recalculer les montants. "
+            "Commente les 3 scénarios. Réponds UNIQUEMENT avec ce JSON exact : "
+            '{"type":"scenarios","scenarios":[{"type_scenario":"bas","narratif":"...","probabilite_qualitative":"faible","conditions":["..."]},'
+            '{"type_scenario":"median","narratif":"...","probabilite_qualitative":"moyenne","conditions":["..."]},'
+            '{"type_scenario":"haut","narratif":"...","probabilite_qualitative":"moyenne","conditions":["..."]}],'
+            '"scenario_de_reference_codir":"median","justification_reference":"..."}'
+            " Ne recalcule pas les montants. "
             + payload
         ),
         "note_codir": (
-            "Rédige une note d'arbitrage Codir d'une page au format JSON. "
-            "La décision doit suivre le score fourni. "
+            "Rédige une note Codir. Réponds UNIQUEMENT avec ce JSON exact : "
+            '{"type":"note_codir","en_tete":{"objet":"...","classification":"Diffusion restreinte"},'
+            '"essentiel_en_5_lignes":["...","...","...","...","..."],'
+            '"arguments_pour":["...","..."],"arguments_contre":["...","..."],'
+            '"risque_principal":"...","condition_suspensive":"...","decision_proposee":"...","prochaine_etape":"..."}'
+            " La décision doit suivre le score fourni. "
             + payload
         ),
         "evaluation": (

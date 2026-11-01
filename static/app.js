@@ -539,13 +539,17 @@ function renderBP(bp) {
   const s = bp.sections || {};
   const block = (title, body) => `<div class="bp-sec"><h3>${title}</h3>${body}</div>`;
   const list = (arr) => `<ul>${(arr || []).map((x) => `<li>${esc(typeof x === "string" ? x : JSON.stringify(x))}</li>`).join("")}</ul>`;
+  const txt = (v) => esc(typeof v === "string" ? v : (v?.texte || v?.contexte || JSON.stringify(v || "")));
+  if (!s.resume_executif && !s.description_projet) {
+    return `<pre style="white-space:pre-wrap">${esc(JSON.stringify(bp, null, 2))}</pre>`;
+  }
   return `
-    ${block("1. Résumé exécutif", `<p>${esc(s.resume_executif?.texte || "")}</p><span class="pill">${esc(s.resume_executif?.go_suggere || "")}</span>`)}
-    ${block("2. Description", `<p>${esc(s.description_projet?.contexte || "")}</p>${list(s.description_projet?.objectifs)}`)}
+    ${block("1. Résumé exécutif", `<p>${txt(s.resume_executif)}</p><span class="pill">${esc(s.resume_executif?.go_suggere || "")}</span>`)}
+    ${block("2. Description", `<p>${txt(s.description_projet)}</p>${list(s.description_projet?.objectifs)}`)}
     ${block("3. Analyse stratégique", `<p>${esc(s.analyse_strategique?.alignement || "")}</p><p>${esc(s.analyse_strategique?.avantage || "")}</p>`)}
-    ${block("4. Marché", `<p>${esc(s.analyse_marche?.cible || "")}</p>`)}
+    ${block("4. Marché", `<p>${esc(s.analyse_marche?.cible || "")}</p>${list(s.analyse_marche?.tendances)}`)}
     ${block("5. Concurrentiel", list(s.analyse_concurrentielle?.facteurs_differenciants))}
-    ${block("6. Modèle économique", `<p>${esc(s.modele_economique?.logique_de_valeur || "")}</p>`)}
+    ${block("6. Modèle économique", `<p>${esc(s.modele_economique?.logique_de_valeur || "")}</p>${list(s.modele_economique?.sources_recettes)}`)}
     ${block("7. Hypothèses", `<p>${esc(s.hypotheses_financieres?.commentaire || "")}</p>`)}
     ${block("8. Scénarios", `<p>${esc(s.scenarios?.commentaire_transversal || "")}</p>`)}
     ${block("9. Plan d’action", list(s.plan_action?.jalons_90_jours) + list(s.plan_action?.jalons_12_mois))}
