@@ -595,27 +595,35 @@ async function renderTypologies() {
   const list = await api("/api/typologies");
   if (!list.length) { $("#typo-list").innerHTML = "<p>Aucune typologie.</p>"; return; }
   const dims = ["rentabilite","alignement_strategique","risque","impact_operationnel","impact_social_env","faisabilite_technique"];
-  const labels = {rentabilite:"Rentab.",alignement_strategique:"Align.",risque:"Risques",impact_operationnel:"Impact",impact_social_env:"Social",faisabilite_technique:"Faisab."};
+  const labels = {rentabilite:"Rentabilité",alignement_strategique:"Alignement",risque:"Risques",impact_operationnel:"Impact op.",impact_social_env:"Social/env.",faisabilite_technique:"Faisabilité"};
   $("#typo-list").innerHTML = `<div class="typo-grid">${list.map(t => `
     <article class="card" data-id="${t.id}">
       <h3>${esc(t.nom)}</h3>
-      ${dims.map(d => `<label style="display:block;font-size:.85rem;margin:.3rem 0">${labels[d]}
-        <input type="range" class="poids" data-dim="${d}" min="0" max="100" value="${Math.round((t.poids[d]||0)*100)}" style="width:100%" />
-        <span class="pval">${Math.round((t.poids[d]||0)*100)}%</span></label>`).join("")}
-      <div class="row" style="margin-top:.5rem">
+      ${dims.map(d => `<div class="slider-row"><span>${labels[d]}</span>
+        <input type="range" class="poids" data-dim="${d}" min="0" max="100" value="${Math.round((t.poids[d]||0)*100)}" />
+        <input type="number" class="pval" data-dim="${d}" min="0" max="100" value="${Math.round((t.poids[d]||0)*100)}" />%</div>`).join("")}
+      <div class="row" style="margin-top:.4rem">
         <span class="muted typo-sum">100%</span>
-        <button class="btn gold typo-save" style="font-size:.8rem;padding:.3rem .6rem">OK</button>
-        <button class="btn ghost typo-del" style="font-size:.8rem;padding:.3rem .6rem">✕</button>
+        <button class="btn gold typo-save" style="font-size:.75rem;padding:.25rem .5rem">OK</button>
+        <button class="btn ghost typo-del" style="font-size:.75rem;padding:.25rem .5rem">✕</button>
       </div>
     </article>`).join("")}</div>`;
   $$(".poids").forEach(i => i.oninput = () => {
-    i.nextElementSibling.textContent = i.value + "%";
-    const card = i.closest(".card");
+    const row = i.closest(".slider-row");
+    row.querySelector(".pval").value = i.value;
+    updateSum(i.closest(".card"));
+  });
+  $$(".pval").forEach(i => i.oninput = () => {
+    const row = i.closest(".slider-row");
+    row.querySelector(".poids").value = i.value;
+    updateSum(i.closest(".card"));
+  });
+  function updateSum(card) {
     const sum = [...card.querySelectorAll(".poids")].reduce((a,c) => a + Number(c.value), 0);
     const el = card.querySelector(".typo-sum");
     el.textContent = sum + "%";
     el.style.color = Math.abs(sum-100) > 1 ? "#e74c3c" : "";
-  });
+  }
   $$(".typo-save").forEach(b => b.onclick = async () => {
     const card = b.closest(".card");
     const poids = {};

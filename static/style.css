@@ -84,16 +84,16 @@ main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
   margin: 0 0 6px;
   font-size: 14px;
 }
-.typo-grid label {
-  font-size: 11px;
-  margin: 2px 0;
+.typo-grid .slider-row {
+  display: flex; align-items: center; gap: 6px; font-size: 11px; margin: 2px 0;
 }
-.typo-grid input[type=range] {
-  height: 14px;
-}
+.typo-grid .slider-row span { width: 70px; flex-shrink: 0; }
+.typo-grid .slider-row input[type=range] { flex: 1; height: 12px; }
+.typo-grid .slider-row input[type=number] { width: 42px; padding: 2px 4px; font-size: 11px; }
 @media (max-width: 800px) {
   .typo-grid { grid-template-columns: 1fr; }
 }
+.card {
   background: var(--card);
   border: 1px solid var(--line);
   padding: 16px 16px 14px;
