@@ -262,8 +262,9 @@ def liste_projets():
     for r in rows:
         full = db.q("SELECT p.*, po.maturite AS porteur_maturite FROM projets p LEFT JOIN porteurs po ON po.id = p.porteur_id WHERE p.id = %s", (r["id"],))
         if full:
-            r["score_pertinence"] = compute_score(_json(full[0]))["score"]
-            r["recommandation"] = compute_score(_json(full[0]))["recommandation"]
+            p = _json(full[0])
+            r["score_pertinence"] = compute_score(p, _weights_for(p.get("typologie")))["score"]
+            r["recommandation"] = compute_score(p, _weights_for(p.get("typologie")))["recommandation"]
     return jsonify(rows)
 
 
